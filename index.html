@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Skripsi Otomatis Offline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Times+New+Roman&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e3a8a',
+                        secondary: '#3b82f6',
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                        darkBorder: '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        academic: ['"Times New Roman"', 'Times', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+        /* Academic Paper styling in preview - STRICT MARGINS: 4-4-3-3 */
+        .academic-paper {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            /* Indonesian Standard Margin: Top 4cm, Left 4cm, Bottom 3cm, Right 3cm */
+            padding: 4cm 3cm 3cm 4cm; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            min-height: 29.7cm; /* A4 height */
+            width: 100%;
+            max-width: 21cm; /* A4 width */
+            margin: 0 auto;
+            text-align: justify;
+        }
+        
+        .academic-paper h1, .academic-paper h2, .academic-paper h3 {
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            line-height: 1.5;
+            margin-top: 18pt;
+            margin-bottom: 12pt;
+        }
+        .academic-paper h1 { font-size: 14pt; }
+        .academic-paper h2 { font-size: 12pt; text-align: left; }
+        .academic-paper h3 { font-size: 12pt; text-align: left; text-transform: none; }
+        
+        .academic-paper p {
+            text-align: justify;
+            text-indent: 1.27cm; /* Standard paragraph indent */
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+        
+        .academic-paper .no-indent { text-indent: 0 !important; }
+        .academic-paper .center-text { text-align: center !important; text-indent: 0 !important; }
+        
+        .academic-paper ul, .academic-paper ol {
+            margin-left: 1.5cm;
+            margin-bottom: 12pt;
+            text-align: justify;
+        }
+        
+        .academic-paper table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12pt 0;
+            font-size: 11pt;
+        }
+        .academic-paper th, .academic-paper td {
+            border: 1px solid #000;
+            padding: 4pt 6pt;
+            text-align: left;
+            vertical-align: top;
+        }
+        .academic-paper th { text-align: center; font-weight: bold; }
+        
+        .page-break { page-break-after: always; margin-bottom: 50px; border-bottom: 1px dashed #ccc; padding-bottom: 20px; }
+        
+        [contenteditable="true"]:focus { outline: 2px solid #3b82f6; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-darkBg text-gray-200 font-sans min-h-screen flex flex-col">
+
+    <header class="border-b border-darkBorder bg-darkCard sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-secondary p-2 rounded-lg text-white font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white">Generator Skripsi Offline</h1>
+                    <p class="text-xs text-gray-400">100% Client-Side | Template Akademik Terstruktur</p>
+                </div>
+            </div>
+            <div class="hidden sm:flex space-x-4">
+                <span class="px-3 py-1 bg-darkBg border border-darkBorder rounded text-xs">Margin: 4-4-3-3</span>
+                <span class="px-3 py-1 bg-darkBg border border-darkBorder rounded text-xs">Font: Times New Roman 12pt</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col md:flex-row gap-6">
+        
+        <!-- Sidebar Navigation (Tabs) -->
+        <div class="w-full md:w-64 flex flex-col space-y-2">
+            <button id="tabBtnForm" class="w-full text-left px-4 py-3 rounded-lg bg-secondary text-white font-semibold flex items-center gap-2 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                1. Form Parameter
+            </button>
+            <button id="tabBtnResult" class="w-full text-left px-4 py-3 rounded-lg bg-darkCard border border-darkBorder text-gray-400 hover:text-white font-semibold flex items-center gap-2 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                2. Hasil Skripsi
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 min-w-0">
+            
+            <div id="viewForm" class="bg-darkCard p-6 rounded-xl border border-darkBorder space-y-5">
+                <h2 class="text-lg font-bold text-white mb-4 border-b border-darkBorder pb-2">Lengkapi Data Skripsi</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Judul Skripsi *</label>
+                        <textarea id="inJudul" rows="2" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary focus:ring-1 focus:ring-secondary outline-none" placeholder="Contoh: Analisis Kinerja Pegawai Berdasarkan Kompetensi dan Disiplin Kerja..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Jurusan / Program Studi *</label>
+                            <select id="inJurusan" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none">
+                                <option value="kesehatan">Administrasi Rumah Sakit / Kesehatan</option>
+                                <option value="keperawatan">Keperawatan</option>
+                                <option value="ekonomi">Ekonomi / Manajemen / Akuntansi</option>
+                                <option value="it">Teknik Informatika / Sistem Informasi</option>
+                                <option value="hukum">Ilmu Hukum</option>
+                                <option value="psikologi">Psikologi</option>
+                                <option value="pendidikan">Pendidikan / Keguruan</option>
+                                <option value="sosial">Ilmu Sosial / Komunikasi</option>
+                                <option value="pertanian">Pertanian / Agribisnis</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Metode Penelitian *</label>
+                            <select id="inMetode" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none">
+                                <option value="Kuantitatif Deskriptif">Kuantitatif Deskriptif & Asosiatif</option>
+                                <option value="Kualitatif Fenomenologi">Kualitatif Fenomenologi</option>
+                                <option value="Mix Method">Mixed Methods (Kuantitatif & Kualitatif)</option>
+                                <option value="R&D">Research and Development (R&D)</option>
+                                <option value="Studi Literatur">Systematic Literature Review (SLR)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Lokasi Penelitian</label>
+                            <input type="text" id="inLokasi" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Contoh: RSUD Dr. Soetomo / PT Maju Jaya">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Populasi / Sampel</label>
+                            <input type="text" id="inPopulasi" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Contoh: 150 Perawat / 85 Karyawan">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Variabel / Fokus Penelitian</label>
+                        <input type="text" id="inVariabel" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Contoh: Kualitas Pelayanan (X), Kepuasan Pasien (Y)">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Nama Penulis</label>
+                            <input type="text" id="inPenulis" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Budi Santoso">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">NIM / NPM</label>
+                            <input type="text" id="inNim" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="1902001122">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Tahun Penulisan</label>
+                            <input type="text" id="inTahun" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" value="2026">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Nama Kampus</label>
+                            <input type="text" id="inKampus" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Universitas Indonesia">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Pembimbing 1</label>
+                            <input type="text" id="inPembimbing1" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Dr. Ahmad, M.Si">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Pembimbing 2</label>
+                            <input type="text" id="inPembimbing2" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Siti Aminah, Ph.D">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Konteks Fenomena (Opsional)</label>
+                        <textarea id="inKonteks" rows="2" class="w-full bg-darkBg border border-darkBorder rounded-lg p-3 text-sm text-white focus:border-secondary outline-none" placeholder="Contoh: Semenjak pandemi, terjadi penurunan omset dan tingginya turnover..."></textarea>
+                    </div>
+
+                    <div class="pt-4">
+                        <button id="btnGenerate" class="w-full py-4 bg-secondary hover:bg-blue-600 text-white font-bold rounded-xl text-lg transition-all shadow-lg shadow-blue-900/50 flex justify-center items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            GENERATE SKRIPSI LENGKAP SEKARANG
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewResult" class="hidden flex flex-col space-y-4">
+                
+                <!-- Action Toolbar -->
+                <div class="bg-darkCard p-4 rounded-xl border border-darkBorder flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]"></div>
+                        <span class="text-sm font-medium text-white">Generasi Selesai (100% Offline Mode)</span>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="btnCopy" class="px-4 py-2 bg-darkBg border border-darkBorder hover:border-secondary text-gray-300 rounded-lg text-sm flex items-center gap-2 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Copy All
+                        </button>
+                        <button id="btnDownload" class="px-4 py-2 bg-secondary hover:bg-blue-600 text-white font-semibold rounded-lg text-sm flex items-center gap-2 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download as .doc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State (Simulated) -->
+                <div id="loadingOverlay" class="hidden bg-darkCard p-10 rounded-xl border border-darkBorder text-center">
+                    <svg class="animate-spin h-10 w-10 text-secondary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-white font-medium">Merangkai Ratusan Halaman Skripsi...</p>
+                    <p class="text-xs text-gray-400 mt-2">Menyusun Bab 1 hingga Lampiran dari template database internal.</p>
+                </div>
+
+                <!-- Editor Preview -->
+                <div id="paperContainer" class="bg-darkCard p-2 sm:p-6 rounded-xl border border-darkBorder overflow-y-auto max-h-[75vh]">
+                    <div id="documentPaper" class="academic-paper" contenteditable="true" spellcheck="false">
+                        <!-- Content goes here -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Global Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-5 py-3 rounded-lg shadow-xl text-sm transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <span id="toastMsg">Pesan Notifikasi</span>
+    </div>
+
+    <script>
+        // Database Internal Terstruktur per Jurusan
+        const JURUSAN_DATA = {
+            kesehatan: {
+                nama: "Administrasi Rumah Sakit / Kesehatan",
+                teori: ["Donabedian (2003) tentang Mutu Pelayanan Kesehatan", "Azwar (2010) tentang Administrasi Kesehatan", "Parasuraman (1988) tentang SERVQUAL dalam Faskes", "Bustami (2011) tentang Penjaminan Mutu"],
+                jurnal: ["Pratama et al. (2022)", "Wibowo (2021)", "Susanti & Setiawan (2023)", "Nugroho (2024)", "Rahmawati (2020)"],
+                fenomena: "peningkatan tuntutan masyarakat terhadap standar mutu pelayanan faskes di era Jaminan Kesehatan Nasional (JKN) yang sering kali tidak sejalan dengan kesiapan infrastruktur dan SDM",
+                objek: "tenaga medis, staf administrasi, dan pasien di fasilitas pelayanan kesehatan",
+                indikator: ["Tangibles (Bukti Fisik)", "Reliability (Keandalan)", "Responsiveness (Daya Tanggap)", "Assurance (Jaminan)", "Empathy (Empati)", "Efisiensi Operasional", "Patient Safety"]
+            },
+            keperawatan: {
+                nama: "Ilmu Keperawatan",
+                teori: ["Nursalam (2015) tentang Manajemen Keperawatan", "Watson (1979) tentang Theory of Human Caring", "Orem (2001) tentang Self-Care Deficit Theory", "Potter & Perry (2013) tentang Fundamental Keperawatan"],
+                jurnal: ["Lestari (2021)", "Hidayat et al. (2022)", "Mulyani (2023)", "Saputra & Wijaya (2024)", "Sari (2020)"],
+                fenomena: "tingginya beban kerja perawat (workload) yang berimbas pada kualitas asuhan keperawatan (caring behavior) dan peningkatan risiko burnout syndrome di masa pasca-pandemi",
+                objek: "perawat pelaksana, kepala ruangan, dan pasien rawat inap",
+                indikator: ["Asuhan Keperawatan", "Caring Behavior", "Beban Kerja", "Tingkat Stres", "Komunikasi Terapeutik", "Kepuasan Pasien"]
+            },
+            ekonomi: {
+                nama: "Ekonomi / Manajemen / Akuntansi",
+                teori: ["Kotler & Keller (2016) tentang Manajemen Pemasaran", "Robbins & Judge (2017) tentang Perilaku Organisasi", "Kieso et al. (2018) tentang Akuntansi Keuangan", "Brigham & Houston (2019) tentang Manajemen Keuangan"],
+                jurnal: ["Firmansyah (2022)", "Kusuma & Hartono (2023)", "Widodo (2021)", "Purnama (2024)", "Gunawan et al. (2020)"],
+                fenomena: "fluktuasi kinerja perusahaan akibat disrupsi digitalisasi bisnis, pergeseran pola perilaku konsumen, serta tantangan efisiensi sistem pengendalian internal",
+                objek: "karyawan, konsumen, sistem keuangan, atau laporan manajerial perusahaan",
+                indikator: ["Kinerja Karyawan", "Disiplin Kerja", "Motivasi", "Kepuasan Pelanggan", "Profitabilitas", "Likuiditas", "Good Corporate Governance (GCG)"]
+            },
+            it: {
+                nama: "Teknik Informatika / Sistem Informasi",
+                teori: ["Pressman (2015) tentang Rekayasa Perangkat Lunak", "Kendall & Kendall (2014) tentang Analisis dan Perancangan Sistem", "Davis (1989) tentang Technology Acceptance Model (TAM)", "Sommerville (2016) tentang Software Engineering"],
+                jurnal: ["Santoso (2023)", "Hermawan et al. (2021)", "Riyadi (2024)", "Baskoro & Suryani (2022)", "Fadilah (2020)"],
+                fenomena: "kebutuhan mendesak akan transformasi digital dan integrasi sistem informasi yang sering terhambat oleh masalah adopsi teknologi (user acceptance) serta ketidakselarasan sistem legacy",
+                objek: "pengguna sistem, arsitektur perangkat lunak, dan proses bisnis terkomputerisasi",
+                indikator: ["Perceived Usefulness", "Perceived Ease of Use", "System Quality", "Information Quality", "User Satisfaction", "Keamanan Data", "Usability"]
+            },
+            hukum: {
+                nama: "Ilmu Hukum",
+                teori: ["Friedman (1975) tentang Sistem Hukum (Legal System)", "Soekanto (1982) tentang Kesadaran Hukum", "Marzuki (2011) tentang Penelitian Hukum Normatif", "Mertokusumo (2007) tentang Penemuan Hukum"],
+                jurnal: ["Hakim (2022)", "Yulianto & Kusuma (2023)", "Siregar (2021)", "Panggabean (2024)", "Nasution (2020)"],
+                fenomena: "terjadinya disharmonisasi peraturan perundang-undangan dan masih lemahnya efektivitas penegakan hukum (law enforcement) di tingkat implementasi masyarakat",
+                objek: "peraturan perundang-undangan, aparat penegak hukum, dan masyarakat terdampak",
+                indikator: ["Struktur Hukum (Legal Structure)", "Substansi Hukum (Legal Substance)", "Budaya Hukum (Legal Culture)", "Kepastian Hukum", "Keadilan", "Kemanfaatan"]
+            },
+            psikologi: {
+                nama: "Psikologi",
+                teori: ["Bandura (1977) tentang Social Learning Theory", "Maslow (1943) tentang Hierarchy of Needs", "Lazarus & Folkman (1984) tentang Stress and Coping", "Goleman (1995) tentang Emotional Intelligence"],
+                jurnal: ["Putri (2023)", "Wirawan (2022)", "Maharani & Setiadi (2021)", "Cahyono (2024)", "Andini (2020)"],
+                fenomena: "peningkatan kerentanan kesehatan mental, kecemasan (anxiety), dan stres akademik/kerja akibat tekanan sosial modern dan perubahan pola interaksi di era digital",
+                objek: "individu, remaja, pekerja, atau kelompok sosial tertentu",
+                indikator: ["Kecerdasan Emosional", "Resiliensi", "Koping Stres", "Self-Efficacy", "Kesejahteraan Psikologis (Well-being)", "Motivasi Berprestasi"]
+            },
+            pendidikan: {
+                nama: "Pendidikan / Keguruan",
+                teori: ["Vygotsky (1978) tentang Teori Konstruktivisme Sosial", "Bloom (1956) tentang Taksonomi Tujuan Pendidikan", "Arikunto (2013) tentang Prosedur Penelitian Pendidikan", "Slavin (2011) tentang Cooperative Learning"],
+                jurnal: ["Suharto (2023)", "Wulandari (2022)", "Haryanto & Yuniar (2021)", "Ningsih (2024)", "Prastowo (2020)"],
+                fenomena: "kesenjangan capaian hasil belajar siswa akibat transisi metode pembelajaran, minimnya inovasi media ajar, dan variasi tingkat motivasi belajar di kelas",
+                objek: "siswa, guru, kurikulum, dan metode pembelajaran di sekolah",
+                indikator: ["Hasil Belajar", "Motivasi Belajar", "Kreativitas", "Efektivitas Model Pembelajaran", "Kompetensi Pedagogik", "Kemandirian Belajar"]
+            },
+            sosial: {
+                nama: "Ilmu Sosial / Komunikasi",
+                teori: ["McQuail (2010) tentang Teori Komunikasi Massa", "Bourdieu (1986) tentang Modal Sosial", "Goffman (1959) tentang Presentasi Diri (Dramaturgi)", "Cangara (2014) tentang Pengantar Ilmu Komunikasi"],
+                jurnal: ["Fauzi (2023)", "Utami (2022)", "Saputro & Dewi (2021)", "Anwar (2024)", "Lubis (2020)"],
+                fenomena: "pergeseran paradigma interaksi sosial dan masifnya disinformasi (hoaks) yang mempengaruhi pembentukan opini publik serta memudarnya kohesi sosial",
+                objek: "masyarakat, media massa, kelompok opini, dan pola komunikasi",
+                indikator: ["Efektivitas Pesan", "Literasi Media", "Interaksi Sosial", "Opini Publik", "Partisipasi Masyarakat", "Kredibilitas Komunikator"]
+            },
+            pertanian: {
+                nama: "Pertanian / Agribisnis",
+                teori: ["Mosher (1966) tentang Syarat Pembangunan Pertanian", "Soekartawi (2002) tentang Analisis Usahatani", "Mubyarto (1989) tentang Pengantar Ekonomi Pertanian", "Soeharjo (1990) tentang Agribisnis"],
+                jurnal: ["Wicaksono (2023)", "Astuti (2022)", "Prayitno & Hartati (2021)", "Ramadhan (2024)", "Kurniawan (2020)"],
+                fenomena: "fluktuasi harga komoditas strategis, kerentanan sistem rantai pasok (supply chain), dan ancaman perubahan iklim yang berdampak pada keberlanjutan pendapatan petani",
+                objek: "kelompok tani, lahan pertanian, komoditas panen, dan rantai distribusi",
+                indikator: ["Produktivitas", "Pendapatan Petani", "Kelayakan Usaha (R/C Ratio)", "Efisiensi Pemasaran", "Adopsi Inovasi", "Ketahanan Pangan"]
+            }
+        };
+
+        // DOM Elements
+        const tabBtnForm = document.getElementById('tabBtnForm');
+        const tabBtnResult = document.getElementById('tabBtnResult');
+        const viewForm = document.getElementById('viewForm');
+        const viewResult = document.getElementById('viewResult');
+        const btnGenerate = document.getElementById('btnGenerate');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const paperContainer = document.getElementById('paperContainer');
+        const documentPaper = document.getElementById('documentPaper');
+        const btnCopy = document.getElementById('btnCopy');
+        const btnDownload = document.getElementById('btnDownload');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+
+        function getRandomArr(arr, count = 2) {
+            let shuffled = arr.slice(0).sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function createFillerText(paragraphs) {
+            // Generates academic-sounding filler to expand page length
+            const sentences = [
+                "Hal ini sejalan dengan prinsip objektivitas yang menuntut adanya validasi faktual di lapangan.",
+                "Dalam konteks ini, paradigma penelitian yang diterapkan berusaha mengurai kompleksitas fenomena secara sistematis.",
+                "Dinamika tersebut mengindikasikan adanya korelasi implisit yang memerlukan kajian lebih komprehensif.",
+                "Berdasarkan tinjauan empiris, elemen-elemen ini sering kali memberikan implikasi manajerial yang signifikan.",
+                "Oleh karena itu, kerangka konseptual yang dibangun harus mampu memfasilitasi analisis yang holistik dan terintegrasi.",
+                "Lebih lanjut, temuan terdahulu memperkuat argumentasi bahwa pendekatan lintas sektoral sangat dibutuhkan.",
+                "Mekanisme ini secara tidak langsung memengaruhi reliabilitas dan validitas instrumen yang digunakan.",
+                "Penting untuk dicatat bahwa batasan ruang lingkup ini tidak mengurangi substansi dari esensi penelitian.",
+                "Aspek metodologis ini menjadi fundamental dalam meminimalisir bias yang mungkin terjadi selama pengumpulan data.",
+                "Implementasi dari teori ini diharapkan dapat menjembatani kesenjangan antara literatur akademis dan praktik di lapangan."
+            ];
+            
+            let result = "";
+            for(let p=0; p<paragraphs; p++) {
+                let para = [];
+                let length = Math.floor(Math.random() * 4) + 4; // 4 to 7 sentences
+                for(let i=0; i<length; i++) {
+                    para.push(sentences[Math.floor(Math.random() * sentences.length)]);
+                }
+                result += `<p>${para.join(" ")}</p>`;
+            }
+            return result;
+        }
+
+        function generateLongSection(title, data, inputData, length = 3) {
+            let html = `<h3>${title}</h3>`;
+            html += `<p>Pembahasan mengenai ${title.toLowerCase()} memegang peranan krusial dalam struktur analisis penelitian ini. Berangkat dari fenomena ${data.fenomena} di lingkungan ${inputData.lokasi}, kajian ini mengedepankan evaluasi objektif terhadap ${inputData.variabel}.</p>`;
+            html += createFillerText(length);
+            return html;
+        }
+
+        function generateThesisDocument() {
+            // Get Input Values
+            const inputData = {
+                judul: document.getElementById('inJudul').value.trim() || 'PENGARUH VARIABEL X TERHADAP VARIABEL Y PADA OBJEK PENELITIAN',
+                jurusanKey: document.getElementById('inJurusan').value,
+                metode: document.getElementById('inMetode').value,
+                lokasi: document.getElementById('inLokasi').value.trim() || 'Lokasi Penelitian',
+                populasi: document.getElementById('inPopulasi').value.trim() || 'Populasi/Sampel',
+                variabel: document.getElementById('inVariabel').value.trim() || 'Variabel Utama',
+                penulis: document.getElementById('inPenulis').value.trim() || 'NAMA PENULIS',
+                nim: document.getElementById('inNim').value.trim() || 'NIM_MAHASISWA',
+                tahun: document.getElementById('inTahun').value.trim() || new Date().getFullYear(),
+                kampus: document.getElementById('inKampus').value.trim() || 'NAMA KAMPUS',
+                pem1: document.getElementById('inPembimbing1').value.trim() || 'Nama Pembimbing 1, S.Pd., M.Si.',
+                pem2: document.getElementById('inPembimbing2').value.trim() || 'Nama Pembimbing 2, M.Sc., Ph.D.',
+                konteks: document.getElementById('inKonteks').value.trim()
+            };
+
+            const data = JURUSAN_DATA[inputData.jurusanKey];
+            
+            // Build Document String
+            let docHTML = "";
+
+            // 1. COVER PAGE
+            docHTML += `
+                <div class="center-text" style="padding-top: 2cm;">
+                    <h1 style="font-size: 16pt; margin-bottom: 2cm; line-height: 1.2;">${inputData.judul.toUpperCase()}</h1>
+                    <p class="center-text" style="margin-bottom: 1.5cm; font-weight: bold; font-size: 14pt;">SKRIPSI</p>
+                    <p class="center-text" style="margin-bottom: 2cm; font-size: 11pt;">
+                        Diajukan Sebagai Salah Satu Syarat Untuk Memperoleh Gelar Sarjana<br>
+                        Program Studi ${data.nama}
+                    </p>
+                    <p class="center-text" style="margin-bottom: 2.5cm;">
+                        <b>Disusun Oleh:</b><br><br>
+                        <b>${inputData.penulis.toUpperCase()}</b><br>
+                        <b>NIM: ${inputData.nim}</b>
+                    </p>
+                    <p class="center-text" style="margin-top: 3cm;">
+                        <b>PROGRAM STUDI ${data.nama.toUpperCase()}</b><br>
+                        <b>${inputData.kampus.toUpperCase()}</b><br>
+                        <b>${inputData.tahun}</b>
+                    </p>
+                </div>
+                <div class="page-break"></div>
+            `;
+
+            // 2. HALAMAN PENGESAHAN
+            docHTML += `
+                <h1 style="margin-bottom: 1cm;">HALAMAN PENGESAHAN</h1>
+                <p class="no-indent" style="line-height: 2;">
+                    Skripsi dengan judul "<b>${inputData.judul}</b>" yang disusun oleh <b>${inputData.penulis}</b> (NIM: ${inputData.nim}), Program Studi ${data.nama}, telah dipertahankan di hadapan dewan penguji pada tanggal _________________ dan dinyatakan <b>LULUS</b>.
+                </p>
+                <br><br>
+                <table style="border: none; width: 100%; margin-top: 2cm;">
+                    <tr style="border: none;">
+                        <td style="border: none; text-align: center; width: 50%;">
+                            Pembimbing I<br><br><br><br><br>
+                            <b><u>${inputData.pem1}</u></b>
+                        </td>
+                        <td style="border: none; text-align: center; width: 50%;">
+                            Pembimbing II<br><br><br><br><br>
+                            <b><u>${inputData.pem2}</u></b>
+                        </td>
+                    </tr>
+                </table>
+                <br><br>
+                <div class="center-text" style="margin-top: 2cm;">
+                    Mengetahui,<br>Ketua Program Studi ${data.nama}<br><br><br><br><br>
+                    <b><u>Dr. Akademik Kampus, M.Si.</u></b>
+                </div>
+                <div class="page-break"></div>
+            `;
+
+            // 3. ABSTRAK
+            docHTML += `
+                <h1>ABSTRAK</h1>
+                <p class="no-indent" style="margin-bottom: 12pt;">
+                    <b>${inputData.penulis}</b>. ${inputData.tahun}. <i>${inputData.judul}</i>. Skripsi, Program Studi ${data.nama}, ${inputData.kampus}. Pembimbing I: ${inputData.pem1}, Pembimbing II: ${inputData.pem2}.
+                </p>
+                <p>
+                    Penelitian ini dilatarbelakangi oleh fenomena ${data.fenomena} yang mengindikasikan urgensi evaluasi terhadap ${inputData.variabel}. Tujuan utama penelitian ini adalah untuk menganalisis dan mendeskripsikan dinamika tersebut pada ${inputData.lokasi}. 
+                    Penelitian ini menggunakan metode <b>${inputData.metode}</b>. Data dikumpulkan dari ${inputData.populasi} menggunakan instrumen yang valid dan reliabel. 
+                    Hasil penelitian menunjukkan bahwa indikator seperti ${data.indikator.slice(0,3).join(", ")} memiliki kontribusi yang signifikan. Kesimpulan dari penelitian ini menegaskan kembali proposisi teoritis dari ${data.teori[0].split(" ")[0]} bahwa efektivitas tata kelola sangat dipengaruhi oleh faktor-faktor internal dan eksternal. Saran yang direkomendasikan adalah perlunya peningkatan kapasitas berkelanjutan di ${inputData.lokasi}.
+                </p>
+                <p class="no-indent" style="margin-top: 12pt;">
+                    <b>Kata Kunci:</b> ${inputData.variabel}, ${data.indikator[0]}, ${data.indikator[1]}, Analisis Akademik.
+                </p>
+                <div class="page-break"></div>
+            `;
+
+            // 4. BAB 1: PENDAHULUAN
+            const cit1 = getRandomArr(data.jurnal, 2);
+            let bab1Konteks = inputData.konteks ? `<p>Secara spesifik, kondisi di lapangan menunjukkan bahwa ${inputData.konteks}. Hal ini memerlukan perhatian khusus dari pihak manajemen maupun regulator.</p>` : "";
+            
+            docHTML += `
+                <h1>BAB I<br>PENDAHULUAN</h1>
+                
+                <h2>1.1 Latar Belakang Masalah</h2>
+                <p>Dalam dinamika perkembangan sektor ${data.nama} di era modern, organisasi dan lembaga dituntut untuk beradaptasi dengan perubahan yang sangat cepat. Salah satu isu sentral yang mengemuka saat ini adalah fenomena ${data.fenomena}. Kondisi ini memicu berbagai implikasi sistemik yang berdampak pada kualitas luaran, produktivitas, serta keberlanjutan institusi. Sebagaimana dikemukakan dalam berbagai literatur akademik, stabilitas suatu sistem sangat bergantung pada bagaimana komponen-komponen di dalamnya saling berinteraksi secara harmonis.</p>
+                <p>Kajian yang dilakukan oleh ${cit1[0]} menegaskan bahwa tanpa adanya intervensi strategis terhadap ${inputData.variabel}, risiko degradasi kinerja akan semakin membesar. Observasi awal pada ${inputData.lokasi} memperlihatkan adanya gejala ketidakselarasan antara prosedur standar dan praktik aktual di lapangan. ${bab1Konteks}</p>
+                <p>Fenomena ini bukan sekadar permasalahan teknis, melainkan menyangkut substansi konseptual yang melibatkan ${data.objek}. Jika dibiarkan berlarut-larut, eskalasi persoalan berpotensi mengganggu stabilitas ekosistem secara makro. Merujuk pada pandangan ${cit1[1]}, optimalisasi elemen dasar seperti ${data.indikator.slice(0,2).join(" dan ")} merupakan syarat mutlak (conditio sine qua non) dalam memformulasikan solusi jangka panjang.</p>
+                ${createFillerText(3)}
+                <p>Berdasarkan latar belakang yang telah dipaparkan secara komprehensif di atas, peneliti memandang penting untuk melakukan investigasi empiris secara mendalam. Oleh karena itu, penelitian ini disusun dengan judul <b>"${inputData.judul}"</b>.</p>
+
+                <h2>1.2 Rumusan Masalah</h2>
+                <p>Berdasarkan identifikasi latar belakang tersebut, maka rumusan masalah dalam penelitian ini adalah:</p>
+                <ol>
+                    <li>Bagaimana deskripsi aktual mengenai kondisi ${inputData.variabel} di ${inputData.lokasi}?</li>
+                    <li>Bagaimana peran indikator ${data.indikator[0]} dan ${data.indikator[1]} dalam membentuk fenomena tersebut?</li>
+                    <li>Apa saja kendala dan strategi optimalisasi yang dapat direkomendasikan terkait ${inputData.variabel}?</li>
+                </ol>
+
+                <h2>1.3 Tujuan Penelitian</h2>
+                <p>Penelitian ini bertujuan untuk:</p>
+                <ol>
+                    <li>Menganalisis secara kritis kondisi objektif dari ${inputData.variabel} pada ${inputData.lokasi}.</li>
+                    <li>Mengkaji signifikansi keterkaitan antara ${data.indikator[0]} dengan operasional institusi.</li>
+                    <li>Merumuskan rekomendasi aplikatif guna perbaikan sistem di masa mendatang.</li>
+                </ol>
+
+                <h2>1.4 Manfaat Penelitian</h2>
+                <p>Penelitian ini diharapkan dapat memberikan kontribusi berupa:</p>
+                <ol>
+                    <li><b>Manfaat Teoritis:</b> Memperkaya khazanah keilmuan pada bidang ${data.nama}, khususnya memperluas diskursus terkait ${inputData.variabel}.</li>
+                    <li><b>Manfaat Praktis:</b> Memberikan masukan strategis (policy brief) bagi manajemen di ${inputData.lokasi} dalam menyusun kebijakan yang presisi.</li>
+                </ol>
+                <div class="page-break"></div>
+            `;
+
+            // 5. BAB 2: TINJAUAN PUSTAKA
+            docHTML += `
+                <h1>BAB II<br>TINJAUAN PUSTAKA</h1>
+                
+                <h2>2.1 Landasan Teori</h2>
+                <p>Konstruksi teoritis dalam penelitian ini bersandar pada beberapa postulat utama yang telah diakui validitasnya dalam ranah ${data.nama}. Teori pertama berpijak pada pemikiran ${data.teori[0]}. Konsep ini menitikberatkan pada elaborasi fungsional dari elemen-elemen fundamental penyusun struktur sistem.</p>
+                ${createFillerText(2)}
+                
+                <h3>2.1.1 Konsep ${inputData.variabel}</h3>
+                <p>Secara etimologis dan terminologis, penjabaran mengenai ${inputData.variabel} mengacu pada teori ${data.teori[1]}. Penekanan diberikan pada bagaimana variabel ini beroperasi sebagai katalisator dalam ekosistem ${data.objek}. Terdapat dimensi-dimensi yang saling bersinggungan yang membutuhkan pembedahan konseptual yang rigid.</p>
+                ${createFillerText(2)}
+                
+                <h3>2.1.2 Indikator Pengukuran</h3>
+                <p>Menurut konsensus para ahli, terdapat beberapa tolok ukur atau indikator krusial yang merepresentasikan konstruksi di atas. Indikator tersebut antara lain:</p>
+                <ul>
+                    ${data.indikator.map(ind => `<li><b>${ind}:</b> Merupakan manifestasi empiris yang dapat diamati secara langsung terkait operasionalisasi konsep. Parameter ini sangat sensitif terhadap perubahan lingkungan eksternal.</li>`).join("")}
+                </ul>
+                ${createFillerText(1)}
+
+                <h2>2.2 Penelitian Terdahulu</h2>
+                <p>Untuk menempatkan penelitian ini (state of the art) pada peta keilmuan yang tepat, berikut disajikan matriks perbandingan dengan studi-studi terdahulu:</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">No</th>
+                            <th style="width: 25%;">Penulis & Tahun</th>
+                            <th style="width: 35%;">Fokus Kajian</th>
+                            <th style="width: 35%;">Hasil Utama</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>${data.jurnal[0]}</td>
+                            <td>Analisis dimensi fundamental pada sektor terkait</td>
+                            <td>Ditemukan urgensi penguatan ${data.indikator[0]} secara berkesinambungan.</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>${data.jurnal[1]}</td>
+                            <td>Evaluasi efektivitas sistem eksisting</td>
+                            <td>Kondisi ${data.fenomena} menjadi penghambat utama kinerja.</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>${data.jurnal[2]}</td>
+                            <td>Studi komparasi parameter kinerja</td>
+                            <td>Terdapat signifikansi moderasi dari tata kelola regulasi.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Berdasarkan pemetaan di atas, gap penelitian (research gap) yang hendak diisi oleh studi ini adalah spesifisitas analisis pada ${inputData.lokasi} dengan mengombinasikan instrumen yang belum diakomodasi oleh studi sebelumnya.</p>
+                
+                <h2>2.3 Kerangka Konseptual</h2>
+                <p>Alur logika penelitian ini divisualisasikan dalam kerangka berpikir yang menghubungkan paradigma makro ${data.teori[0].split(" ")[0]} dengan observasi mikro ${inputData.variabel}. Proses deduktif-induktif ini mengarahkan peneliti pada hipotesis maupun pertanyaan riset yang kokoh.</p>
+                ${createFillerText(2)}
+                <div class="page-break"></div>
+            `;
+
+            // 6. BAB 3: METODOLOGI
+            docHTML += `
+                <h1>BAB III<br>METODOLOGI PENELITIAN</h1>
+                
+                <h2>3.1 Pendekatan dan Jenis Penelitian</h2>
+                <p>Desain metodologis yang diaplikasikan dalam kajian ini menggunakan metode <b>${inputData.metode}</b>. Pemilihan paradigma ini didasarkan pada karakteristik ontologis dan epistemologis rumusan masalah yang menuntut kedalaman analisis serta akurasi pengungkapan fakta di lapangan.</p>
+                ${createFillerText(2)}
+                
+                <h2>3.2 Lokasi dan Waktu Penelitian</h2>
+                <p>Penelitian ini berlokasi di <b>${inputData.lokasi}</b>. Pemilihan locus ini dipertimbangkan berdasarkan kompleksitas fenomena ${data.fenomena} yang terjadi di dalamnya. Proses pengambilan data (fieldwork) dialokasikan dalam rentang waktu yang memadai guna memastikan saturasi data dan validitas informasi.</p>
+
+                <h2>3.3 Populasi, Sampel, dan Informan</h2>
+                <p>Target populasi/subjek dalam riset ini difokuskan pada <b>${inputData.populasi}</b>. Penentuan elemen sampel atau informan kunci dilakukan secara purposif (purposive sampling) dengan kriteria inklusi spesifik yang relevan dengan ${data.objek}. Hal ini krusial untuk mencegah distorsi informasi.</p>
+                ${createFillerText(1)}
+
+                <h2>3.4 Teknik Pengumpulan Data</h2>
+                <p>Prosedur agregasi data dilakukan secara komprehensif melalui metode triangulasi. Teknik yang digunakan meliputi:</p>
+                <ol>
+                    <li><b>Observasi Partisipatif / Non-Partisipatif:</b> Pengamatan langsung terhadap aktivitas ${data.objek} di ${inputData.lokasi}.</li>
+                    <li><b>Wawancara / Kuesioner:</b> Penggalian informasi mendalam berbasis instrumen terstruktur yang merujuk pada indikator ${data.indikator[0]} dan ${data.indikator[1]}.</li>
+                    <li><b>Studi Dokumentasi:</b> Telaah arsip, laporan kinerja, dan regulasi internal yang relevan dengan ${inputData.variabel}.</li>
+                </ol>
+
+                <h2>3.5 Uji Keabsahan dan Analisis Data</h2>
+                <p>Proses analisis bertumpu pada tahapan reduksi data, penyajian data, hingga penarikan kesimpulan. Pengujian kredibilitas, validitas, dan reliabilitas data dijaga secara ketat melalui audit metodologis berlapis agar hasil akhir bebas dari tendensi subjektif.</p>
+                ${createFillerText(2)}
+                <div class="page-break"></div>
+            `;
+
+            // 7. BAB 4: HASIL DAN PEMBAHASAN
+            docHTML += `
+                <h1>BAB IV<br>HASIL PENELITIAN DAN PEMBAHASAN</h1>
+                
+                <h2>4.1 Gambaran Umum Objek Penelitian</h2>
+                <p>Eksistensi institusi di ${inputData.lokasi} merupakan representasi dari dinamika makro sistem ${data.nama}. Secara historis, entitas ini telah menjalankan mandatnya dalam mengelola ${data.objek}. Namun, tekanan lingkungan eksternal menuntut adanya adaptasi berkesinambungan.</p>
+                ${createFillerText(2)}
+
+                <h2>4.2 Deskripsi Hasil Penelitian</h2>
+                <p>Berdasarkan data primer yang diperoleh dari ${inputData.populasi}, ditemukan konfigurasi realitas empiris yang kompleks terkait ${inputData.variabel}. Agregasi temuan menyoroti beberapa aspek kritikal:</p>
+                
+                <h3>4.2.1 Evaluasi terhadap ${data.indikator[0]}</h3>
+                <p>Tingkat capaian pada indikator ini menunjukkan variansi yang moderat. Informan mengungkapkan bahwa keterbatasan infrastruktur logis menjadi hambatan utama. Meskipun demikian, inisiatif mandiri dari elemen staf memberikan efek penyangga (buffer effect) yang positif.</p>
+                ${createFillerText(1)}
+
+                <h3>4.2.2 Analisis Kondisi ${data.indikator[1]}</h3>
+                <p>Sebaliknya, pada dimensi ${data.indikator[1]}, teridentifikasi celah (gap) operasional yang masif. Data empiris memperlihatkan bahwa instruksi prosedural sering terdistorsi saat diimplementasikan ke tingkat akar rumput (grassroots).</p>
+                ${createFillerText(2)}
+
+                <h2>4.3 Pembahasan (Discussion)</h2>
+                <p>Diskursus akademis dari temuan riset ini mengarah pada justifikasi atas proposisi ${data.teori[0]}. Fenomena ${data.fenomena} ternyata bertindak sebagai variabel intervening laten yang merekonstruksi pola interaksi ${data.objek}.</p>
+                <p>Kondisi faktual di ${inputData.lokasi} tidak sepenuhnya selaras dengan asumsi ideal literatur. Temuan ini mengkonfirmasi riset ${data.jurnal[0]} bahwa anomali struktural meniscayakan pendekatan asimetris. Lebih jauh, jika dikorelasikan dengan teori ${data.teori[1]}, stagnasi kinerja bukan semata akibat kelemahan individu, melainkan kegagalan sistemik dalam merespons turbulensi.</p>
+                ${createFillerText(4)}
+                <div class="page-break"></div>
+            `;
+
+            // 8. BAB 5: KESIMPULAN & SARAN
+            docHTML += `
+                <h1>BAB V<br>PENUTUP</h1>
+                
+                <h2>5.1 Kesimpulan</h2>
+                <p>Mengacu pada reduksi analitis di Bab IV, konstruksi kesimpulan yang dapat ditarik dari elaborasi ${inputData.variabel} di ${inputData.lokasi} adalah sebagai berikut:</p>
+                <ol>
+                    <li>Kondisi eksisting ${inputData.variabel} berada pada kuadran transisional. Kinerja indikator inti seperti ${data.indikator[0]} belum mencapai titik ekuilibrium yang diidealkan, sangat terdampak oleh fenomena ${data.fenomena}.</li>
+                    <li>Struktur tata kelola yang memayungi ${data.objek} memiliki resistensi inheren terhadap inovasi. Diperlukan dekonstruksi parsial pada SOP guna meningkatkan fleksibilitas operasional.</li>
+                    <li>Sinergitas antara teori ${data.teori[0]} dan praktik di lapangan membuktikan perlunya orkestrasi manajemen sumber daya yang lebih progresif, humanis, dan berbasis data empiris.</li>
+                </ol>
+
+                <h2>5.2 Saran</h2>
+                <p>Rekomendasi yang dapat diajukan berdasarkan limitasi dan temuan riset ini adalah:</p>
+                <ol>
+                    <li><b>Aspek Manajerial / Praktis:</b> Pimpinan di ${inputData.lokasi} direkomendasikan untuk merevitalisasi protokol evaluasi dengan memasukkan dimensi ${data.indikator[2]} sebagai Key Performance Indicator (KPI) utama.</li>
+                    <li><b>Aspek Akademis / Teoritis:</b> Kepada peneliti selanjutnya, disarankan untuk mengadopsi pendekatan longitudinal atau memperluas cakupan variabel moderasi guna memperoleh konfigurasi model kausalitas yang lebih komprehensif di bidang ${data.nama}.</li>
+                </ol>
+                <div class="page-break"></div>
+            `;
+
+            // 9. DAFTAR PUSTAKA
+            docHTML += `
+                <h1>DAFTAR PUSTAKA</h1>
+                <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">Arikunto, S. (2013). <i>Prosedur Penelitian: Suatu Pendekatan Praktik</i>. Jakarta: Rineka Cipta.</p>
+                <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">${data.jurnal[0].replace(/\(.*?\)/,'')} (2022). "Analisis Dinamika ${data.nama} di Era Disrupsi". <i>Jurnal Akademik Nasional</i>, 12(3), 45-62.</p>
+                <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">${data.jurnal[1].replace(/\(.*?\)/,'')} (2021). "Transformasi Ekosistem ${data.objek} Pasca Pandemi". <i>Indonesian Journal of Science</i>, 9(1), 112-128.</p>
+                <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">${data.teori[0].split(" ")[0]}, dkk. (2019). <i>Fundamental ${data.nama} Terapan</i>. Bandung: Alfabeta.</p>
+                <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">${data.teori[1].split(" ")[0]}. (2015). <i>Teori dan Praktik Pengelolaan Institusi</i>. Yogyakarta: Pustaka Pelajar.</p>
+                <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">Moleong, L. J. (2018). <i>Metodologi Penelitian Kualitatif</i>. Bandung: PT Remaja Rosdakarya.</p>
+                <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">Sugiyono. (2020). <i>Metode Penelitian Kuantitatif, Kualitatif, dan R&D</i>. Bandung: Alfabeta.</p>
+                <div class="page-break"></div>
+            `;
+
+            // 10. LAMPIRAN
+            docHTML += `
+                <h1>LAMPIRAN</h1>
+                <h2>Lampiran 1: Matriks / Kisi-kisi Instrumen Penelitian</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">No</th>
+                            <th style="width: 30%;">Variabel / Indikator</th>
+                            <th style="width: 60%;">Deskripsi Item Pertanyaan / Pernyataan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="center-text">1</td>
+                            <td><b>${data.indikator[0]}</b></td>
+                            <td>
+                                1. Bagaimana ketersediaan sumber daya esensial di lokasi?<br>
+                                2. Sejauh mana standar operasional mendukung efisiensi?<br>
+                                3. Apakah prosedur eksisting sudah memenuhi syarat validitas operasional?
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="center-text">2</td>
+                            <td><b>${data.indikator[1]}</b></td>
+                            <td>
+                                1. Mengukur tingkat reliabilitas luaran sistem per kuartal.<br>
+                                2. Mengidentifikasi gap kompetensi antar staf terkait.<br>
+                                3. Evaluasi mekanisme monitoring dan evaluasi.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="center-text">3</td>
+                            <td><b>${data.indikator[2] || 'Parameter Kinerja Lainnya'}</b></td>
+                            <td>
+                                1. Penilaian tingkat responsivitas institusi terhadap krisis.<br>
+                                2. Survei kepuasan stakeholders/pengguna jasa.<br>
+                                3. Analisis beban kerja komparatif harian.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            return docHTML;
+        }
+
+        
+        function switchTab(tabId) {
+            if (tabId === 'form') {
+                viewForm.classList.remove('hidden');
+                viewResult.classList.add('hidden');
+                tabBtnForm.classList.replace('bg-darkCard', 'bg-secondary');
+                tabBtnForm.classList.replace('text-gray-400', 'text-white');
+                tabBtnForm.classList.remove('border-darkBorder', 'hover:text-white', 'border');
+                
+                tabBtnResult.classList.replace('bg-secondary', 'bg-darkCard');
+                tabBtnResult.classList.replace('text-white', 'text-gray-400');
+                tabBtnResult.classList.add('border-darkBorder', 'hover:text-white', 'border');
+            } else {
+                viewResult.classList.remove('hidden');
+                viewForm.classList.add('hidden');
+                tabBtnResult.classList.replace('bg-darkCard', 'bg-secondary');
+                tabBtnResult.classList.replace('text-gray-400', 'text-white');
+                tabBtnResult.classList.remove('border-darkBorder', 'hover:text-white', 'border');
+                
+                tabBtnForm.classList.replace('bg-secondary', 'bg-darkCard');
+                tabBtnForm.classList.replace('text-white', 'text-gray-400');
+                tabBtnForm.classList.add('border-darkBorder', 'hover:text-white', 'border');
+            }
+        }
+
+        tabBtnForm.addEventListener('click', () => switchTab('form'));
+        tabBtnResult.addEventListener('click', () => switchTab('result'));
+
+        function showToast(msg) {
+            toastMsg.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        btnGenerate.addEventListener('click', () => {
+            if (!document.getElementById('inJudul').value.trim()) {
+                alert("Harap isi Judul Skripsi terlebih dahulu!");
+                document.getElementById('inJudul').focus();
+                return;
+            }
+
+            // Switch to result tab
+            switchTab('result');
+            
+            // Show loading
+            paperContainer.classList.add('hidden');
+            loadingOverlay.classList.remove('hidden');
+
+            // Simulate heavy processing (delay for UX)
+            setTimeout(() => {
+                const generatedText = generateThesisDocument();
+                documentPaper.innerHTML = generatedText;
+                
+                loadingOverlay.classList.add('hidden');
+                paperContainer.classList.remove('hidden');
+                showToast("Skripsi Berhasil Dibuat (Panjang & Lengkap)!");
+            }, 1500);
+        });
+
+        
+        btnCopy.addEventListener('click', () => {
+            const text = documentPaper.innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Seluruh teks berhasil disalin!');
+            } catch (err) {
+                showToast('Gagal menyalin. Silakan copy manual.');
+            }
+            document.body.removeChild(textarea);
+        });
+
+        btnDownload.addEventListener('click', () => {
+            // Trick to export HTML as Word doc while keeping styling and margins
+            const header = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <title>Draft Skripsi</title>
+                <style>
+                    /* Define Word Page Settings (A4, Margins: Top 4cm, Bottom 3cm, Left 4cm, Right 3cm) */
+                    @page WordSection1 {
+                        size: 21cm 29.7cm;
+                        margin: 4cm 3cm 3cm 4cm;
+                        mso-header-margin: 35.4pt;
+                        mso-footer-margin: 35.4pt;
+                        mso-paper-source: 0;
+                    }
+                    div.WordSection1 { page: WordSection1; }
+                    
+                    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: black; }
+                    h1 { font-size: 14pt; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 12pt; }
+                    h2 { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-top: 12pt; margin-bottom: 8pt; }
+                    h3 { font-size: 12pt; font-weight: bold; margin-top: 10pt; margin-bottom: 6pt; }
+                    p { text-align: justify; text-indent: 1.27cm; margin-bottom: 0; margin-top: 0; }
+                    .no-indent { text-indent: 0 !important; }
+                    .center-text { text-align: center; text-indent: 0; }
+                    table { border-collapse: collapse; width: 100%; margin: 12pt 0; }
+                    th, td { border: 1px solid black; padding: 5pt; vertical-align: top; }
+                    th { font-weight: bold; text-align: center; }
+                    br { mso-data-placement: same-cell; }
+                    .page-break { page-break-after: always; mso-break-type: page-break; }
+                </style>
+            </head>
+            <body>
+            <div class="WordSection1">
+            `;
+            const footer = "</div></body></html>";
+            
+            // Clean up the html (convert visual page breaks to actual Word page breaks)
+            let rawHtml = documentPaper.innerHTML;
+            rawHtml = rawHtml.replace(/<div class="page-break"><\/div>/g, '<br clear="all" style="page-break-before:always" />');
+
+            const sourceHTML = header + rawHtml + footer;
+
+            const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            const docName = document.getElementById('inPenulis').value.trim() || 'Skripsi';
+            a.download = `Draft_Skripsi_${docName.replace(/\s+/g, '_')}.doc`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('File Document (.doc) berhasil diunduh dengan margin 4-4-3-3!');
+        });
+    </script>
+</body>
+</html>
