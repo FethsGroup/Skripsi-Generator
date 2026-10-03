@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Skripsi Otomatis - AI Academic Writer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0a0a0a',
+                        darkCard: '#141414',
+                        darkBorder: '#262626',
+                        emeraldAccent: '#10b981',
+                        emeraldHover: '#059669',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        academic: ['Merriweather', 'Georgia', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for dark UI */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+        /* Academic Paper styling in preview */
+        .academic-paper {
+            background-color: #ffffff;
+            color: #111827;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            padding: 2.54cm 2.54cm 2.54cm 3.81cm; /* Standard Indonesian Thesis Margin: Top 2.54, Bottom 2.54, Right 2.54, Left 3.81 */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            min-height: 1000px;
+        }
+        .academic-paper h1 {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            margin-top: 18pt;
+            margin-bottom: 12pt;
+        }
+        .academic-paper h2 {
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 14pt;
+            margin-bottom: 6pt;
+        }
+        .academic-paper h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 10pt;
+            margin-bottom: 4pt;
+        }
+        .academic-paper p {
+            text-align: justify;
+            text-indent: 1.27cm;
+            margin-bottom: 8pt;
+        }
+        .academic-paper ul, .academic-paper ol {
+            margin-left: 1.5cm;
+            margin-bottom: 8pt;
+        }
+        .academic-paper li {
+            text-align: justify;
+        }
+        .academic-paper .no-indent {
+            text-indent: 0 !important;
+        }
+        .academic-paper table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12pt 0;
+            font-size: 11pt;
+        }
+        .academic-paper th, .academic-paper td {
+            border: 1px solid #000;
+            padding: 5pt 8pt;
+            text-align: left;
+        }
+        .academic-paper th {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            text-align: center;
+        }
+        [contenteditable="true"]:focus {
+            outline: 2px solid #10b981;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-gray-200 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-darkBorder bg-darkCard sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emeraldAccent p-2 rounded-lg text-black font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white">Generator Skripsi Otomatis</h1>
+                    <p class="text-xs text-gray-400">Standard Akademik Indonesia - Dynamic Human-Style AI</p>
+                </div>
+            </div>
+            
+            <!-- Quick Stats Header -->
+            <div class="hidden md:flex items-center space-x-6 text-sm">
+                <div class="bg-darkBg px-3 py-1.5 rounded-md border border-darkBorder">
+                    <span class="text-gray-400">Total Kata:</span>
+                    <span id="headerTotalWords" class="font-semibold text-emeraldAccent">0</span>
+                </div>
+                <div class="bg-darkBg px-3 py-1.5 rounded-md border border-darkBorder">
+                    <span class="text-gray-400">Est. Waktu Baca:</span>
+                    <span id="headerReadTime" class="font-semibold text-emeraldAccent">0 mnt</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Panel: Input Controls & Tabs (5 Cols Desktop) -->
+        <div class="lg:col-span-5 flex flex-col space-y-4">
+            
+            <!-- Navigation Tabs -->
+            <div class="flex bg-darkCard p-1 rounded-xl border border-darkBorder">
+                <button id="tabBtnInputs" class="flex-1 py-2 px-3 text-xs sm:text-sm font-medium rounded-lg bg-emeraldAccent text-black transition-all">
+                    Form Parameter
+                </button>
+                <button id="tabBtnPrompts" class="flex-1 py-2 px-3 text-xs sm:text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all">
+                    Prompt Customizer
+                </button>
+            </div>
+
+            <!-- TAB 1: FORM INPUTS -->
+            <div id="tabContentInputs" class="bg-darkCard p-5 rounded-xl border border-darkBorder space-y-4 max-h-[calc(100vh-160px)] overflow-y-auto">
+                
+                <!-- API Key Section -->
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-semibold text-emeraldAccent flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z"></path></svg>
+                            Google Gemini API Key
+                        </label>
+                        <a href="https://aistudio.google.com/" target="_blank" class="text-[10px] text-gray-400 hover:text-emeraldAccent underline">Dapatkan Key Gratis</a>
+                    </div>
+                    <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="w-full bg-darkCard border border-darkBorder rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                    <div class="flex items-center justify-between pt-1">
+                        <label class="flex items-center text-xs text-gray-400 cursor-pointer">
+                            <input type="checkbox" id="toggleAiMode" class="sr-only peer" checked>
+                            <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emeraldAccent relative"></div>
+                            <span class="ml-2 text-[11px]" id="aiModeLabel">Mode: Gemini AI Active</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Academic Parameters -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Judul / Topik Skripsi Utama *</label>
+                    <textarea id="inputJudul" rows="3" placeholder="Contoh: Pengaruh Digital Marketing dan Quality of Work Life Terhadap Kinerja Karyawan Generasi Z Pada Perusahaan Startup..." class="w-full bg-darkBg border border-darkBorder rounded-md p-2.5 text-xs text-white focus:outline-none focus:border-emeraldAccent"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Bidang / Jurusan *</label>
+                        <select id="selectJurusan" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                            <option value="Manajemen / Ekonomi">Manajemen / Ekonomi</option>
+                            <option value="Teknik Informatika / Sistem Informasi">Teknik Informatika / SI</option>
+                            <option value="Psikologi">Psikologi</option>
+                            <option value="Hukum">Hukum</option>
+                            <option value="Pendidikan / Keguruan">Pendidikan / Keguruan</option>
+                            <option value="Ilmu Kesehatan / Keperawatan">Ilmu Kesehatan</option>
+                            <option value="Ilmu Komunikasi / Sosial">Ilmu Komunikasi / Sosial</option>
+                            <option value="Teknik Sipil / Industri">Teknik Sipil / Industri</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Metode Penelitian *</label>
+                        <select id="selectMetode" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                            <option value="Kuantitatif (Regresi / SEM)">Kuantitatif (Survei/Stats)</option>
+                            <option value="Kualitatif Deskriptif / Fenomenologi">Kualitatif Deskriptif</option>
+                            <option value="Mixed Methods (Kuantitatif + Kualitatif)">Mixed Methods</option>
+                            <option value="Research & Development (R&D)">Research & Dev (R&D)</option>
+                            <option value="Studi Kasus">Studi Kasus</option>
+                            <option value="Eksperimen Studio / Lab">Eksperimen Studio/Lab</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Lokasi / Objek Penelitian</label>
+                        <input type="text" id="inputLokasi" placeholder="PT XYZ Jakarta / SMA 1 Semarang" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Populasi & Sampel</label>
+                        <input type="text" id="inputPopulasi" placeholder="150 Karyawan / 85 Responden" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Variabel / Focus Keyword</label>
+                    <input type="text" id="inputVariabel" placeholder="X1: Digital Marketing, X2: Quality of Work Life, Y: Kinerja" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                </div>
+
+                <!-- Identity Details -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Tahun</label>
+                        <input type="number" id="inputTahun" value="2026" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Nama Penulis</label>
+                        <input type="text" id="inputPenulis" placeholder="Budi Santoso" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Nama Kampus</label>
+                        <input type="text" id="inputKampus" placeholder="Universitas Indonesia" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Nama Pembimbing</label>
+                        <input type="text" id="inputPembimbing" placeholder="Dr. Ahmad Subagyo, M.Si." class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                    </div>
+                </div>
+
+                <!-- Tone & Length Settings -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Gaya Bahasa</label>
+                        <select id="selectGaya" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                            <option value="Formal Akademis Khas Indonesia">Formal Akademis Strict</option>
+                            <option value="Semi-Formal Ringkas">Semi-Formal Modern</option>
+                            <option value="Akademis Analitis Mendalam">Analitis Mendalam</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Target Kedalaman</label>
+                        <select id="selectPanjang" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                            <option value="Lengkap & Padat (~100 Halaman)">Lengkap & Detail (~100 hlm)</option>
+                            <option value="Standar Skripsi (~60 Halaman)">Standar (~60 hlm)</option>
+                            <option value="Ringkas / Draft Cepat (~30 Halaman)">Ringkas (~30 hlm)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="pt-2 border-t border-darkBorder space-y-2">
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Pilih Target Generasi:</label>
+                    <select id="selectChapterToGenerate" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-white focus:outline-none focus:border-emeraldAccent">
+                        <option value="ALL">--- SEMUA BAB (LENGKAP DARI A-Z) ---</option>
+                        <option value="COVER">Halaman Judul & Pengesahan</option>
+                        <option value="ABSTRAK">Abstrak (Indo & English) + Kata Pengantar</option>
+                        <option value="BAB1">BAB I: PENDAHULUAN</option>
+                        <option value="BAB2">BAB II: TINJAUAN PUSTAKA</option>
+                        <option value="BAB3">BAB III: METODOLOGI PENELITIAN</option>
+                        <option value="BAB4">BAB IV: HASIL DAN PEMBAHASAN</option>
+                        <option value="BAB5">BAB V: PENUTUP (Kesimpulan & Saran)</option>
+                        <option value="PUSTAKA">DAFTAR PUSTAKA & LAMPIRAN</option>
+                    </select>
+
+                    <button id="btnGenerate" class="w-full bg-emeraldAccent hover:bg-emeraldHover text-black font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-950/40">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span>GENERATE SKRIPSI SEKARANG</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: PROMPT CUSTOMIZER -->
+            <div id="tabContentPrompts" class="hidden bg-darkCard p-5 rounded-xl border border-darkBorder space-y-4 max-h-[calc(100vh-160px)] overflow-y-auto">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-sm font-bold text-emeraldAccent">Customizer Prompt Akademik</h2>
+                    <button id="btnResetPrompts" class="text-[11px] text-gray-400 hover:text-white underline">Reset Default</button>
+                </div>
+                <p class="text-xs text-gray-400">Atur instruksi mendalam yang dikirimkan ke AI untuk setiap bab guna menyesuaikan kriteria kampus Anda.</p>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">System Anti-AI Cliché Prompt</label>
+                        <textarea id="promptSystem" rows="3" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-emeraldAccent"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Prompt BAB I (Pendahuluan)</label>
+                        <textarea id="promptBab1" rows="3" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-emeraldAccent"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Prompt BAB II (Tinjauan Pustaka)</label>
+                        <textarea id="promptBab2" rows="3" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-emeraldAccent"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Prompt BAB III (Metodologi)</label>
+                        <textarea id="promptBab3" rows="3" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-emeraldAccent"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Prompt BAB IV (Hasil & Pembahasan)</label>
+                        <textarea id="promptBab4" rows="3" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-emeraldAccent"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Prompt BAB V & Daftar Pustaka</label>
+                        <textarea id="promptBab5" rows="3" class="w-full bg-darkBg border border-darkBorder rounded-md p-2 text-xs text-gray-300 font-mono focus:outline-none focus:border-emeraldAccent"></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Panel: Preview & Document Editor (7 Cols Desktop) -->
+        <div class="lg:col-span-7 flex flex-col space-y-4">
+            
+            <!-- Toolbar Export & Status -->
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center space-x-2">
+                    <div id="statusDot" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                    <span id="statusText" class="text-xs font-medium text-gray-300">Siap Generasi Skripsi</span>
+                </div>
+
+                <!-- Export Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button id="btnCopy" title="Salin Ke Clipboard" class="p-2 bg-darkBg hover:bg-darkBorder text-gray-300 hover:text-emeraldAccent rounded-lg border border-darkBorder transition-all text-xs flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                        <span class="hidden sm:inline">Copy</span>
+                    </button>
+                    <button id="btnDownloadTxt" title="Download File Text" class="p-2 bg-darkBg hover:bg-darkBorder text-gray-300 hover:text-emeraldAccent rounded-lg border border-darkBorder transition-all text-xs flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="hidden sm:inline">.TXT</span>
+                    </button>
+                    <button id="btnDownloadDoc" title="Download File Word (.doc)" class="py-2 px-3 bg-emeraldAccent hover:bg-emeraldHover text-black font-semibold rounded-lg transition-all text-xs flex items-center gap-1 shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Download .DOC (Word)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Realtime Progress Bar -->
+            <div id="progressContainer" class="hidden bg-darkCard p-3 rounded-xl border border-darkBorder space-y-2">
+                <div class="flex justify-between text-xs">
+                    <span id="progressStepText" class="text-emeraldAccent font-semibold">Proses Generasi...</span>
+                    <span id="progressPercentText" class="text-gray-400">0%</span>
+                </div>
+                <div class="w-full bg-darkBg rounded-full h-2 overflow-hidden border border-darkBorder">
+                    <div id="progressBar" class="bg-emeraldAccent h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Document Content Preview Area (A4 Editable Simulation) -->
+            <div class="bg-darkCard p-3 sm:p-6 rounded-xl border border-darkBorder flex-1 overflow-y-auto max-h-[calc(100vh-220px)] flex justify-center">
+                <div id="documentPaper" class="academic-paper w-full max-w-[21cm] min-h-[29.7cm] outline-none" contenteditable="true" spellcheck="false">
+                    <div class="text-center py-20 text-gray-400 font-sans">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-gray-300 mb-1">Draft Skripsi Belum Di-generate</h3>
+                        <p class="text-xs max-w-md mx-auto">Isi parameter penelitian pada panel sebelah kiri, pilih mode pembuatan (Gemini AI atau Template Mode), lalu klik tombol "GENERATE SKRIPSI SEKARANG".</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Global Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-emeraldAccent text-black px-4 py-2.5 rounded-lg shadow-2xl font-semibold text-xs transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-2">
+        <span id="toastMsg">Pesan Notifikasi</span>
+    </div>
+
+    <!-- JavaScript Logic Section -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Default System Prompts designed for human-like Indonesian thesis structure
+            const defaultPrompts = {
+                system: `Anda adalah pakar penulisan tesis dan skripsi senior Indonesia dengan pemahaman metodologi mendalam. 
+PENTING - ATURAN GAYA PENULISAN MANUSIA (HUMAN ACADEMIC STYLE):
+1. DILARANG KERAS menggunakan frasa template AI seperti: "Dalam era globalisasi yang pesat ini", "Seiring perkembangan zaman", "Pada hakikatnya", "Dapat disimpulkan bahwa", "Sangat penting untuk diingat".
+2. Gunakan variasi panjang kalimat (gabungan kalimat pendek lugas dan kalimat kompleks logis).
+3. Awali Latar Belakang langsung pada fenomena riil/data kuantitatif/kasus nyata di lapangan, BUKAN filosofi umum yang klise.
+4. Sertakan referensi rujukan ilmiah dengan format standar (Nama Penulis, Tahun) secara natural dalam paragraf.
+5. Gunakan transisi antarparagraf yang organis dan variatif.`,
+
+                bab1: `Buatkan BAB I PENDAHULUAN lengkap & mendalam untuk skripsi berikut:
+Judul: {JUDUL}
+Jurusan: {JURUSAN}
+Metode: {METODE}
+Lokasi/Objek: {LOKASI}
+Populasi/Sampel: {POPULASI}
+Variabel: {VARIABEL}
+
+Struktur Wajib Bab I:
+1.1 Latar Belakang Masalah (Mulai dari fenomena industri/lapangan spesifik, sajikan data/fakta, jelaskan fenomena gap, sertakan penelitian terdahulu pendukung, dan akhiri dengan urgensi penelitian ini).
+1.2 Rumusan Masalah (Minimal 3 poin spesifik).
+1.3 Tujuan Penelitian (Sesuai dengan rumusan masalah).
+1.4 Manfaat Penelitian (Manfaat Teoritis & Manfaat Praktis).
+1.5 Batasan dan Ruang Lingkup Penelitian.
+
+Format HTML bersih tanpa tag markdown \`\`\`html. Gunakan tag <h1>, <h2>, <h3>, <p>, <ol>, <ul>.`,
+
+                bab2: `Buatkan BAB II TINJAUAN PUSTAKA komprehensif untuk skripsi berikut:
+Judul: {JUDUL}
+Jurusan: {JURUSAN}
+Variabel: {VARIABEL}
+Metode: {METODE}
+
+Struktur Wajib Bab II:
+2.1 Landasan Teori Utama (Jelaskan secara mendalam definisi, indikator, dan dimensi masing-masing variabel berdasarkan para ahli terkemuka dengan tahun sitasi).
+2.2 Penelitian Terdahulu yang Relevan (Buatkan minimal 3 studi terdahulu berupa paragraf komparasi kritikal dan buatkan TABEL perbandingan HTML lengkap dengan kolom: No, Penulis/Tahun, Judul, Metode, Hasil, Perbedaan).
+2.3 Kerangka Berpikir / Kerangka Konseptual (Penjelasan naratif alur hubungan antar variabel).
+2.4 Hipotesis Penelitian (Jika kuantitatif, buat H1, H2, dst; Jika kualitatif, buat Pertanyaan Penelitian Lanjutan).
+
+Format HTML bersih tanpa tag markdown \`\`\`html.`,
+
+                bab3: `Buatkan BAB III METODOLOGI PENELITIAN terperinci untuk skripsi berikut:
+Judul: {JUDUL}
+Jurusan: {JURUSAN}
+Metode: {METODE}
+Lokasi/Objek: {LOKASI}
+Populasi/Sampel: {POPULASI}
+Variabel: {VARIABEL}
+
+Struktur Wajib Bab III:
+3.1 Pendekatan dan Jenis Penelitian (Jelaskan alasan filosofis metodologis pemilihan metode ini, bukan sekadar definisi buku).
+3.2 Lokasi dan Waktu Penelitian.
+3.3 Populasi, Sampel, dan Teknik Sampling (Jelaskan rumus/teknik penentuan ukuran sampel secara teknis).
+3.4 Definisi Operasional Variabel (Buatkan TABEL HTML Operasionalisasi Variabel dengan kolom: Variabel, Definisi Operasional, Indikator, Skala Pengukuran).
+3.5 Teknik Pengumpulan Data.
+3.6 Uji Validitas dan Reliabilitas / Triangulasi Data.
+3.7 Teknik Analisis Data (Langkah-langkah pengolahan data statistik atau analisis domain).
+
+Format HTML bersih tanpa tag markdown \`\`\`html.`,
+
+                bab4: `Buatkan BAB IV HASIL PENELITIAN DAN PEMBAHASAN realistis untuk skripsi berikut:
+Judul: {JUDUL}
+Jurusan: {JURUSAN}
+Metode: {METODE}
+Lokasi/Objek: {LOKASI}
+Populasi/Sampel: {POPULASI}
+
+Struktur Wajib Bab IV:
+4.1 Gambaran Umum Objek Penelitian / Profil Responden (Sajikan data statistik deskriptif realistis dalam bentuk Tabel HTML).
+4.2 Deskripsi Data dan Hasil Uji Hipotesis / Analisis Temuan (Sajikan hasil kalkulasi angka/narasi analisis wawancara mendalam).
+4.3 Pembahasan (Diskusi akademis menghubungkan hasil penelitian ini dengan teori Bab II dan temuan penelitian terdahulu - apakah mendukung atau menolak teori).
+4.4 Keterbatasan Penelitian.
+
+Format HTML bersih tanpa tag markdown \`\`\`html.`,
+
+                bab5: `Buatkan BAB V PENUTUP DAN DAFTAR PUSTAKA untuk skripsi berikut:
+Judul: {JUDUL}
+Jurusan: {JURUSAN}
+
+Struktur Wajib:
+5.1 Kesimpulan (Menjawab langsung seluruh rumusan masalah secara eksplisit dan analitis).
+5.2 Saran (Saran Operasional untuk Objek Penelitian & Saran Akademis untuk Peneliti Selanjutnya).
+
+DAFTAR PUSTAKA
+Buatkan minimal 15-20 daftar pustaka berkualitas format APA 7th Edition (Susun alfabetis A-Z, gunakan referensi jurnal nasional/internasional terindeks dan buku teks utama).
+
+Format HTML bersih tanpa tag markdown \`\`\`html.`
+            };
+
+            // DOM Elements Mapping
+            const inputApiKey = document.getElementById('inputApiKey');
+            const toggleAiMode = document.getElementById('toggleAiMode');
+            const aiModeLabel = document.getElementById('aiModeLabel');
+            const inputJudul = document.getElementById('inputJudul');
+            const selectJurusan = document.getElementById('selectJurusan');
+            const selectMetode = document.getElementById('selectMetode');
+            const inputLokasi = document.getElementById('inputLokasi');
+            const inputPopulasi = document.getElementById('inputPopulasi');
+            const inputVariabel = document.getElementById('inputVariabel');
+            const inputTahun = document.getElementById('inputTahun');
+            const inputPenulis = document.getElementById('inputPenulis');
+            const inputKampus = document.getElementById('inputKampus');
+            const inputPembimbing = document.getElementById('inputPembimbing');
+            const selectGaya = document.getElementById('selectGaya');
+            const selectPanjang = document.getElementById('selectPanjang');
+            const selectChapterToGenerate = document.getElementById('selectChapterToGenerate');
+            const btnGenerate = document.getElementById('btnGenerate');
+
+            const tabBtnInputs = document.getElementById('tabBtnInputs');
+            const tabBtnPrompts = document.getElementById('tabBtnPrompts');
+            const tabContentInputs = document.getElementById('tabContentInputs');
+            const tabContentPrompts = document.getElementById('tabContentPrompts');
+
+            const promptSystem = document.getElementById('promptSystem');
+            const promptBab1 = document.getElementById('promptBab1');
+            const promptBab2 = document.getElementById('promptBab2');
+            const promptBab3 = document.getElementById('promptBab3');
+            const promptBab4 = document.getElementById('promptBab4');
+            const promptBab5 = document.getElementById('promptBab5');
+            const btnResetPrompts = document.getElementById('btnResetPrompts');
+
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressStepText = document.getElementById('progressStepText');
+            const progressPercentText = document.getElementById('progressPercentText');
+
+            const documentPaper = document.getElementById('documentPaper');
+            const headerTotalWords = document.getElementById('headerTotalWords');
+            const headerReadTime = document.getElementById('headerReadTime');
+
+            const btnCopy = document.getElementById('btnCopy');
+            const btnDownloadTxt = document.getElementById('btnDownloadTxt');
+            const btnDownloadDoc = document.getElementById('btnDownloadDoc');
+
+            // Load Saved API Key
+            const savedKey = localStorage.getItem('gemini_thesis_api_key');
+            if (savedKey) {
+                inputApiKey.value = savedKey;
+                toggleAiMode.checked = true;
+                aiModeLabel.textContent = "Mode: Gemini AI Active";
+                aiModeLabel.classList.remove('text-yellow-400');
+            } else {
+                toggleAiMode.checked = false;
+                aiModeLabel.textContent = "Mode: Offline Template";
+                aiModeLabel.classList.add('text-yellow-400');
+            }
+
+            inputApiKey.addEventListener('input', () => {
+                const val = inputApiKey.value.trim();
+                localStorage.setItem('gemini_thesis_api_key', val);
+                if (val.length > 0) {
+                    toggleAiMode.checked = true;
+                    aiModeLabel.textContent = "Mode: Gemini AI Active";
+                    aiModeLabel.classList.remove('text-yellow-400');
+                } else {
+                    toggleAiMode.checked = false;
+                    aiModeLabel.textContent = "Mode: Offline Template";
+                    aiModeLabel.classList.add('text-yellow-400');
+                }
+            });
+
+            // Load Default Prompts into customizer
+            function loadPromptsToUI() {
+                promptSystem.value = defaultPrompts.system;
+                promptBab1.value = defaultPrompts.bab1;
+                promptBab2.value = defaultPrompts.bab2;
+                promptBab3.value = defaultPrompts.bab3;
+                promptBab4.value = defaultPrompts.bab4;
+                promptBab5.value = defaultPrompts.bab5;
+            }
+            loadPromptsToUI();
+
+            btnResetPrompts.addEventListener('click', () => {
+                if (confirm('Kembalikan semua prompt ke pengaturan standar akademik?')) {
+                    loadPromptsToUI();
+                    showToast('Prompt telah direset!');
+                }
+            });
+
+            // Toggle Tab Navigation
+            tabBtnInputs.addEventListener('click', () => {
+                tabBtnInputs.classList.add('bg-emeraldAccent', 'text-black');
+                tabBtnInputs.classList.remove('text-gray-400');
+                tabBtnPrompts.classList.remove('bg-emeraldAccent', 'text-black');
+                tabBtnPrompts.classList.add('text-gray-400');
+                tabContentInputs.classList.remove('hidden');
+                tabContentPrompts.classList.add('hidden');
+            });
+
+            tabBtnPrompts.addEventListener('click', () => {
+                tabBtnPrompts.classList.add('bg-emeraldAccent', 'text-black');
+                tabBtnPrompts.classList.remove('text-gray-400');
+                tabBtnInputs.classList.remove('bg-emeraldAccent', 'text-black');
+                tabBtnInputs.classList.add('text-gray-400');
+                tabContentPrompts.classList.remove('hidden');
+                tabContentInputs.classList.add('hidden');
+            });
+
+            toggleAiMode.addEventListener('change', () => {
+                if (toggleAiMode.checked) {
+                    aiModeLabel.textContent = "Mode: Gemini AI Active";
+                    aiModeLabel.classList.remove('text-yellow-400');
+                } else {
+                    aiModeLabel.textContent = "Mode: Offline Template";
+                    aiModeLabel.classList.add('text-yellow-400');
+                }
+            });
+
+            // Gemini API Fetch Engine
+            async function callGeminiApi(promptText, systemInstructionText) {
+                const apiKey = inputApiKey.value.trim();
+                if (!apiKey) {
+                    throw new Error('API Key Google Gemini belum diisi di Form Input!');
+                }
+
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [
+                        { role: 'user', parts: [{ text: promptText }] }
+                    ],
+                    systemInstruction: {
+                        parts: [{ text: systemInstructionText }]
+                    },
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 8192,
+                    }
+                };
+
+                let retries = 3;
+                let delay = 1000;
+
+                while (retries > 0) {
+                    try {
+                        const res = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!res.ok) {
+                            const errData = await res.json();
+                            throw new Error(errData.error?.message || `API Error HTTP ${res.status}`);
+                        }
+
+                        const data = await res.json();
+                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                        if (!rawText) throw new Error('Model mengembalikan respon kosong.');
+
+                        // Clean potential markdown code blocks
+                        return rawText.replace(/```html/gi, '').replace(/```/g, '').trim();
+
+                    } catch (err) {
+                        retries--;
+                        if (retries === 0) throw err;
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2;
+                    }
+                }
+            }
+
+            // Replace template placeholders
+            function formatPrompt(template) {
+                return template
+                    .replace(/{JUDUL}/g, inputJudul.value || 'Topik Skripsi Belum Ditentukan')
+                    .replace(/{JURUSAN}/g, selectJurusan.value)
+                    .replace(/{METODE}/g, selectMetode.value)
+                    .replace(/{LOKASI}/g, inputLokasi.value || 'Objek Penelitian Terkait')
+                    .replace(/{POPULASI}/g, inputPopulasi.value || 'Sampel Terkait')
+                    .replace(/{VARIABEL}/g, inputVariabel.value || 'Variabel Utama')
+                    .replace(/{TAHUN}/g, inputTahun.value)
+                    .replace(/{PENULIS}/g, inputPenulis.value || 'Penulis')
+                    .replace(/{KAMPUS}/g, inputKampus.value || 'Universitas')
+                    .replace(/{PEMBIMBING}/g, inputPembimbing.value || 'Dosen Pembimbing');
+            }
+
+            // Fallback Offline Generator (Template Mode)
+            function generateOfflineChapter(chapterKey) {
+                const judul = inputJudul.value || 'Pengaruh Variabel Utama Terhadap Kinerja Objek Penelitian';
+                const penulis = inputPenulis.value || 'NAMA MAHASISWA';
+                const kampus = inputKampus.value || 'NAMA UNIVERSITAS';
+                const tahun = inputTahun.value || '2026';
+                const pembimbing = inputPembimbing.value || 'Dosen Pembimbing, M.Si.';
+
+                if (chapterKey === 'COVER') {
+                    return `
+                        <div style="text-align: center; line-height: 1.8; margin-bottom: 50px;">
+                            <h1 style="font-size: 16pt; margin-bottom: 24pt;">${judul.toUpperCase()}</h1>
+                            <p class="no-indent" style="margin-bottom: 30pt;"><b>SKRIPSI</b></p>
+                            <p class="no-indent" style="font-size: 10pt; margin-bottom: 60pt;">Diajukan sebagai salah satu syarat untuk memperoleh gelar Sarjana (${selectJurusan.value})</p>
+                            
+                            <div style="margin: 40px 0;">
+                                <p class="no-indent"><b>Oleh:</b></p>
+                                <p class="no-indent"><b>${penulis.toUpperCase()}</b></p>
+                                <p class="no-indent">NIM: 123456789</p>
+                            </div>
+
+                            <div style="margin-top: 80px;">
+                                <p class="no-indent"><b>FAKULTAS ${selectJurusan.value.toUpperCase()}</b></p>
+                                <p class="no-indent"><b>${kampus.toUpperCase()}</b></p>
+                                <p class="no-indent"><b>${tahun}</b></p>
+                            </div>
+                        </div>
+                        <div style="page-break-after: always;"></div>
+                        <div>
+                            <h1>HALAMAN PENGESAHAN</h1>
+                            <p class="no-indent">Skripsi berjudul "<b>${judul}</b>" yang disusun oleh <b>${penulis}</b> telah dipertahankan di depan Dewan Penguji pada tanggal ${new Date().toLocaleDateString('id-ID')}.</p>
+                            <br><br>
+                            <table style="border:none; width:100%;">
+                                <tr style="border:none;">
+                                    <td style="border:none; width:50%;">
+                                        <p class="no-indent">Pembimbing I,</p><br><br><br>
+                                        <p class="no-indent"><b><u>${pembimbing}</u></b></p>
+                                    </td>
+                                    <td style="border:none; width:50%;">
+                                        <p class="no-indent">Ketua Program Studi,</p><br><br><br>
+                                        <p class="no-indent"><b><u>Dr. Kaprodi Akademik, M.Pd.</u></b></p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                if (chapterKey === 'ABSTRAK') {
+                    return `
+                        <h1>ABSTRAK</h1>
+                        <p class="no-indent"><b>${penulis}</b>. (${tahun}). <i>${judul}</i>. Skripsi. Program Studi ${selectJurusan.value}, ${kampus}. Pembimbing: ${pembimbing}.</p>
+                        <p>Penelitian ini bertujuan untuk menganalisis secara komprehensif mengenai ${inputVariabel.value || 'variabel penelitian'} pada ${inputLokasi.value || 'objek studi'}. Menggunakan metode ${selectMetode.value}, data dikumpulkan dari ${inputPopulasi.value || 'sejumlah responden'} melalui instrumen terstruktur. Hasil analisis menunjukkan bahwa terdapat pengaruh yang signifikan dan positif antar variabel yang diteliti. Implikasi dari penelitian ini memberikan kontribusi teoritis bagi pengembangan keilmuan serta rekomendasi praktis bagi manajerial.</p>
+                        <p class="no-indent"><b>Kata Kunci:</b> ${inputVariabel.value || 'Skripsi, Penelitian, Analisis'}, ${selectJurusan.value}.</p>
+                        <br>
+                        <h1>ABSTRACT</h1>
+                        <p class="no-indent"><i>This study aims to comprehensively analyze ${inputVariabel.value || 'research variables'} at ${inputLokasi.value || 'study object'}. Using ${selectMetode.value} method, data was collected from respondents using validated instruments. The empirical results indicate a significant relationship among variables...</i></p>
+                        <p class="no-indent"><b>Keywords:</b> ${inputVariabel.value || 'Research, Analysis'}, Academic Thesis.</p>
+                    `;
+                }
+
+                if (chapterKey === 'BAB1') {
+                    return `
+                        <h1>BAB I<br>PENDAHULUAN</h1>
+                        <h2>1.1 Latar Belakang Masalah</h2>
+                        <p>Dalam konteks perkembangan sektor ${selectJurusan.value} saat ini, tantangan efisiensi dan efektivitas operasional di ${inputLokasi.value || 'instansi'} semakin kompleks. Fenomena di lapangan menunjukkan adanya dinamika signifikan yang melibatkan ${inputVariabel.value || 'variabel utama penelitian'}. Berdasarkan data awal, ditemukan kesenjangan kinerja yang memerlukan intervensi ilmiah secara mendalam.</p>
+                        <p>Penelitian terdahulu yang dilakukan oleh Rahardjo (2022) mengindikasikan pentingnya pengukuran variabel secara berkala. Namun demikian, terdapat gap penelitian (research gap) mengenai konteks spesifik di ${inputLokasi.value || 'objek ini'}. Oleh karena itu, penelitian ini krusial untuk dilaksanakan.</p>
+                        <h2>1.2 Rumusan Masalah</h2>
+                        <ol>
+                            <li>Bagaimana deskripsi faktual mengenai ${inputVariabel.value || 'variabel X'} pada ${inputLokasi.value || 'objek penelitian'}?</li>
+                            <li>Apakah terdapat pengaruh signifikan secara parsial maupun simultan antar variabel?</li>
+                            <li>Bagaimana model rekomendasi strategis yang efisien berdasarkan temuan lapangan?</li>
+                        </ol>
+                        <h2>1.3 Tujuan Penelitian</h2>
+                        <ol>
+                            <li>Untuk menganalisis dan menguji secara empiris kondisi ${inputVariabel.value || 'variabel penelitian'}.</li>
+                            <li>Untuk merumuskan strategi aplikatif bagi pemangku kepentingan.</li>
+                        </ol>
+                    `;
+                }
+
+                if (chapterKey === 'BAB2') {
+                    return `
+                        <h1>BAB II<br>TINJAUAN PUSTAKA</h1>
+                        <h2>2.1 Landasan Teori</h2>
+                        <p>Teori utama yang melandasi penelitian ini adalah kerangka teoritis mengenai ${inputVariabel.value || 'Variabel Penelitian'}, sebagaimana dikemukakan oleh para ahli akademik terkemuka (Kotler & Keller, 2021; Sugiyono, 2023). Konsep ini menekankan pentingnya indikator terukur dalam mengevaluasi efektivitas organisasi.</p>
+                        <h2>2.2 Penelitian Terdahulu</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Penulis & Tahun</th>
+                                    <th>Judul Penelitian</th>
+                                    <th>Metode</th>
+                                    <th>Hasil Utama</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Pratama (2023)</td>
+                                    <td>Analisis Variabel Pada Objek Sejenis</td>
+                                    <td>Kuantitatif</td>
+                                    <td>Signifikan Positif</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Setiawan et al. (2022)</td>
+                                    <td>Studi Komparatif Sektor Terkait</td>
+                                    <td>Kualitatif</td>
+                                    <td>Ditemukan 3 Faktor Kunci</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                if (chapterKey === 'BAB3') {
+                    return `
+                        <h1>BAB III<br>METODOLOGI PENELITIAN</h1>
+                        <h2>3.1 Jenis Penelitian</h2>
+                        <p>Penelitian ini menggunakan pendekatan <b>${selectMetode.value}</b>. Pendekatan ini dipilih karena mampu memberikan pemahaman yang komprehensif dan objektif terhadap fenomena yang diteliti di ${inputLokasi.value || 'lokasi penelitian'}.</p>
+                        <h2>3.2 Populasi dan Sampel</h2>
+                        <p>Populasi dalam penelitian ini mencakup ${inputPopulasi.value || 'seluruh elemen subjek'}. Penentuan sampel dilakukan menggunakan teknik purposive sampling untuk memastikan representativitas data.</p>
+                    `;
+                }
+
+                if (chapterKey === 'BAB4') {
+                    return `
+                        <h1>BAB IV<br>HASIL PENELITIAN DAN PEMBAHASAN</h1>
+                        <h2>4.1 Gambaran Umum Objek Penelitian</h2>
+                        <p>Penelitian dilaksanakan di ${inputLokasi.value || 'objek penelitian'} yang berlokasi strategis. Profil responden didominasi oleh kelompok usia produktif dengan tingkat pendidikan yang memadai.</p>
+                        <h2>4.2 Hasil Analisis Data</h2>
+                        <p>Berdasarkan pengolahan data statistik, diperoleh nilai koefisien determinasi R-Square sebesar 0,674. Hal ini menunjukkan bahwa variabel independen mampu menjelaskan 67,4% variasi variabel dependen.</p>
+                    `;
+                }
+
+                if (chapterKey === 'BAB5') {
+                    return `
+                        <h1>BAB V<br>PENUTUP</h1>
+                        <h2>5.1 Kesimpulan</h2>
+                        <p>Berdasarkan hasil analisis data dan pembahasan yang telah diuraikan pada Bab IV, maka dapat ditarik kesimpulan bahwa seluruh hipotesis yang diajukan dalam penelitian ini terbukti signifikan secara empiris.</p>
+                        <h2>DAFTAR PUSTAKA</h2>
+                        <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm;">Kotler, P., & Keller, K. L. (2021). <i>Marketing Management</i> (16th ed.). Pearson Education.</p>
+                        <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm;">Sugiyono. (2023). <i>Metode Penelitian Kuantitatif, Kualitatif, dan R&D</i>. Alfabeta.</p>
+                    `;
+                }
+
+                if (chapterKey === 'PUSTAKA') {
+                    return `
+                        <h1>DAFTAR PUSTAKA</h1>
+                        <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">Arikunto, S. (2020). <i>Prosedur Penelitian Suatu Pendekatan Praktik</i>. Jakarta: Rineka Cipta.</p>
+                        <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">Kotler, P., & Keller, K. L. (2021). <i>Marketing Management</i> (16th ed.). Pearson Education.</p>
+                        <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">Pratama, A., & Setiawan, B. (2023). Analisis Pengaruh Variabel Strategis Terhadap Kinerja Organisasi. <i>Jurnal Riset Akademik Indonesia</i>, 12(2), 145-158.</p>
+                        <p class="no-indent" style="margin-left: 1.27cm; text-indent: -1.27cm; margin-bottom: 8pt;">Sugiyono. (2023). <i>Metode Penelitian Kuantitatif, Kualitatif, dan R&D</i>. Bandung: Alfabeta.</p>
+                        <br>
+                        <h1>LAMPIRAN</h1>
+                        <h2>Lampiran 1: Kuesioner / Pedoman Wawancara Penelitian</h2>
+                        <p>Berikut adalah lembar instrumen pengumpulan data yang digunakan dalam penelitian pada ${inputLokasi.value || 'Objek Penelitian'}:</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Pernyataan / Indikator</th>
+                                    <th>STS</th>
+                                    <th>TS</th>
+                                    <th>N</th>
+                                    <th>S</th>
+                                    <th>SS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Sistem kerja dan lingkungan operasional berjalan sesuai standar akademik.</td>
+                                    <td></td><td></td><td></td><td></td><td></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Faktor variabel pendukung berpengaruh secara langsung terhadap hasil kerja.</td>
+                                    <td></td><td></td><td></td><td></td><td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                return `<p>Bab tidak ditemukan.</p>`;
+            }
+
+            // Main Generation Controller
+            async function generateThesis() {
+                const targetChapter = selectChapterToGenerate.value;
+                let isAiMode = toggleAiMode.checked;
+                const apiKey = inputApiKey.value.trim();
+
+                if (!inputJudul.value.trim()) {
+                    alert('Mohon isi Judul / Topik Skripsi terlebih dahulu!');
+                    inputJudul.focus();
+                    return;
+                }
+
+                // If AI Mode is on but no key is provided, gracefully auto-fallback to Offline Template
+                if (isAiMode && !apiKey) {
+                    showToast('API Key kosong! Beralih otomatis ke Mode Offline Template.');
+                    isAiMode = false;
+                }
+
+                // UI Loading States
+                btnGenerate.disabled = true;
+                btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
+                progressContainer.classList.remove('hidden');
+                statusDot.className = "w-3 h-3 rounded-full bg-yellow-500 animate-pulse";
+                statusText.textContent = "Proses Generasi Berlangsung...";
+
+                const chaptersToRun = [];
+
+                if (targetChapter === 'ALL') {
+                    chaptersToRun.push(
+                        { key: 'COVER', title: 'Halaman Judul & Pengesahan', prompt: '' },
+                        { key: 'ABSTRAK', title: 'Abstrak & Kata Pengantar', prompt: '' },
+                        { key: 'BAB1', title: 'BAB I PENDAHULUAN', prompt: promptBab1.value },
+                        { key: 'BAB2', title: 'BAB II TINJAUAN PUSTAKA', prompt: promptBab2.value },
+                        { key: 'BAB3', title: 'BAB III METODOLOGI PENELITIAN', prompt: promptBab3.value },
+                        { key: 'BAB4', title: 'BAB IV HASIL DAN PEMBAHASAN', prompt: promptBab4.value },
+                        { key: 'BAB5', title: 'BAB V PENUTUP & DAFTAR PUSTAKA', prompt: promptBab5.value }
+                    );
+                    documentPaper.innerHTML = ''; // Clear existing document for ALL
+                } else {
+                    const titleMap = {
+                        'COVER': 'Halaman Judul',
+                        'ABSTRAK': 'Abstrak',
+                        'BAB1': 'BAB I',
+                        'BAB2': 'BAB II',
+                        'BAB3': 'BAB III',
+                        'BAB4': 'BAB IV',
+                        'BAB5': 'BAB V',
+                        'PUSTAKA': 'Daftar Pustaka & Lampiran'
+                    };
+                    const promptMap = {
+                        'BAB1': promptBab1.value,
+                        'BAB2': promptBab2.value,
+                        'BAB3': promptBab3.value,
+                        'BAB4': promptBab4.value,
+                        'BAB5': promptBab5.value,
+                        'PUSTAKA': promptBab5.value
+                    };
+                    chaptersToRun.push({
+                        key: targetChapter,
+                        title: titleMap[targetChapter] || targetChapter,
+                        prompt: promptMap[targetChapter] || promptBab5.value
+                    });
+                }
+
+                let totalSteps = chaptersToRun.length;
+
+                for (let i = 0; i < totalSteps; i++) {
+                    const item = chaptersToRun[i];
+                    const percent = Math.round(((i + 1) / totalSteps) * 100);
+
+                    progressStepText.textContent = `Men-generate: ${item.title}...`;
+                    progressBar.style.width = `${percent}%`;
+                    progressPercentText.textContent = `${percent}%`;
+
+                    let generatedHtml = '';
+
+                    try {
+                        if (!isAiMode || item.key === 'COVER') {
+                            // Use offline template generator for Cover or Template Mode
+                            await new Promise(r => setTimeout(r, 400));
+                            generatedHtml = generateOfflineChapter(item.key);
+                        } else {
+                            // Call Gemini API
+                            const fullPrompt = formatPrompt(item.prompt);
+                            generatedHtml = await callGeminiApi(fullPrompt, promptSystem.value);
+                        }
+                    } catch (error) {
+                        console.error(`Error generating ${item.key}:`, error);
+                        showToast(`Gagal AI (${item.key}), menggunakan fallback template.`);
+                        generatedHtml = generateOfflineChapter(item.key);
+                    }
+
+                    // Append or Replace Content
+                    if (targetChapter === 'ALL' && i > 0) {
+                        documentPaper.innerHTML += `<div style="page-break-after: always; margin-top: 40px; border-top: 1px dashed #ccc; padding-top: 20px;"></div>` + generatedHtml;
+                    } else {
+                        if (i === 0 && targetChapter !== 'ALL') {
+                            documentPaper.innerHTML = generatedHtml;
+                        } else if (i === 0) {
+                            documentPaper.innerHTML = generatedHtml;
+                        } else {
+                            documentPaper.innerHTML += generatedHtml;
+                        }
+                    }
+
+                    updateDocumentStats();
+                }
+
+                // Done State
+                btnGenerate.disabled = false;
+                btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
+                statusDot.className = "w-3 h-3 rounded-full bg-emeraldAccent";
+                statusText.textContent = "Selesai Generasi Skripsi!";
+                progressStepText.textContent = "Proses Selesai!";
+                showToast('Draft skripsi berhasil dibuat!');
+            }
+
+            btnGenerate.addEventListener('click', generateThesis);
+
+            // Word count and Reading time calculator
+            function updateDocumentStats() {
+                const text = documentPaper.innerText || documentPaper.textContent || '';
+                const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+                const readTimeMinutes = Math.ceil(words / 200); // Avg 200 wpm
+
+                headerTotalWords.textContent = words.toLocaleString('id-ID');
+                headerReadTime.textContent = `${readTimeMinutes} mnt`;
+            }
+
+            documentPaper.addEventListener('input', updateDocumentStats);
+
+            // Toast Helper
+            function showToast(msg) {
+                const toast = document.getElementById('toast');
+                const toastMsg = document.getElementById('toastMsg');
+                toastMsg.textContent = msg;
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+
+            // Export: Copy to Clipboard
+            btnCopy.addEventListener('click', () => {
+                const text = documentPaper.innerText;
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Teks skripsi disalin ke clipboard!');
+                } catch (err) {
+                    showToast('Gagal menyalin teks.');
+                }
+                document.body.removeChild(textarea);
+            });
+
+            // Export: Download .TXT
+            btnDownloadTxt.addEventListener('click', () => {
+                const text = documentPaper.innerText;
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Draft_Skripsi_${(inputPenulis.value || 'Lengkap').replace(/\s+/g, '_')}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // Export: Download .DOC (HTML to MS Word Blob)
+            btnDownloadDoc.addEventListener('click', () => {
+                const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset='utf-8'><title>Draft Skripsi</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; }
+                    h1 { font-size: 14pt; font-weight: bold; text-align: center; text-transform: uppercase; }
+                    h2 { font-size: 12pt; font-weight: bold; text-transform: uppercase; }
+                    p { text-align: justify; text-indent: 1.27cm; }
+                    table { border-collapse: collapse; width: 100%; margin: 12pt 0; }
+                    th, td { border: 1px solid black; padding: 5pt; text-align: left; }
+                </style>
+                </head><body>`;
+                const footer = "</body></html>";
+                const sourceHTML = header + documentPaper.innerHTML + footer;
+
+                const blob = new Blob(['\ufeff', sourceHTML], {
+                    type: 'application/msword'
+                });
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Draft_Skripsi_${(inputPenulis.value || 'Akademik').replace(/\s+/g, '_')}.doc`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('File Word (.doc) berhasil diunduh!');
+            });
+        });
+    </script>
+</body>
+</html>
